@@ -3,19 +3,18 @@ import random
 import numpy as np
 
 
-# Para cada individuo calculamos la propabilidad de que este sea escogido
+# Para cada individual calculamos la propabilidad de que este sea escogido
 def prob_selection_population(population):
     pop_aux = []
     # Calculamos la suma de todos fitness de la poblacion
     sum_fitness_total = 0.0
     for individual in population:
-        sum_fitness_total += individual[1]
+        sum_fitness_total += individual["fitness"]
     print sum_fitness_total
 
     for individual in population:
-        pr = individual[1] / sum_fitness_total
-        individual_aux = (individual[0],individual[1], pr)
-        pop_aux.append(individual_aux)
+        individual["propability"] = individual["fitness"] / sum_fitness_total
+        pop_aux.append(individual)
 
     population = pop_aux
     return population
@@ -27,7 +26,7 @@ def selection(population, num_hyp):
     pop_aux = []
     k = 0
     for individual in population:
-        if prob >= 0 and prob <= individual[2]:
+        if prob >= 0 and prob <= individual["propability"]:
             pop_aux.append(individual)
             k += 1
 
@@ -42,36 +41,50 @@ def selection_random_hyp(population, n):
 	type3 = []
 	pop_aux = []
 	maxi = n/3
-	i = 0
-	while i < maxi:
+
+	for i in range(maxi):
+		rd = np.random.uniform(0,1)
+		if rd >= 0 and rd <= 0.33:
+			k = np.random.random_integers(0,15)
+			pop_aux.append(population[k])
+		elif rd > 0.33 and rd <= 0.66:
+			k = np.random.random_integers(16,31)
+			pop_aux.append(population[k])
+		elif rd > 0.66:
+			k = np.random.random_integers(32,49)
+			pop_aux.append(population[k])
+
+	for i in range(maxi):
 		rd = np.random.uniform(0,1)
 		if rd <= 0.33:
-			k = np.random.random_integers(0,15)
-        elif rd > 0.33 and rd <= 0.66:
-            k = np.random.random_integers(16,31)
-        else:
-            k = np.random.random_integers(32,49)
-        type1.append(population[k])
+			k = np.random.random_integers(50,65)
+			pop_aux.append(population[k])
+		elif rd > 0.33 and rd <= 0.66:
+			k = np.random.random_integers(66,81)
+			pop_aux.append(population[k])
+		elif rd > 0.66:
+			k = np.random.random_integers(82,99)
+			pop_aux.append(population[k])
 
-		i += 1
+	for i in range(maxi):
+		rd = np.random.uniform(0,1)
+		if rd <= 0.33:
+			k = np.random.random_integers(100,115)
+			pop_aux.append(population[k])
+		elif rd > 0.33 and rd <= 0.66:
+			k = np.random.random_integers(116,131)
+			pop_aux.append(population[k])
+		elif rd > 0.66:
+			k = np.random.random_integers(132,149)
+			pop_aux.append(population[k])
 
-	i = 50
-	while i < 99:
-		type2.append(population[i])
-		i += 1
-
-	i = 100
-	while i < 149:
-		type3.append(population[i])
-		i += 1
+	return pop_aux
 
 
-
-
-# Elegimos aleatoriamente un individuo
+# Generamos 100 individuals aleatoriamente
 def individual_selection(population):
 	parents = []
-	# Generamos 100 individuos
+	# Generamos 100 individuals
 	for i in range(100):
 		child = []
 		while True:
@@ -89,20 +102,21 @@ def individual_selection(population):
 
 
 # Operados de cruce
-def crossover(parent_1, parent_2, pc):
+def crossover_aux(parent_1, parent_2, pc):
     cross = np.random.uniform(0,1)
     print cross
     if cross >= 0 and cross <= pc:
+    	# VERIFICAR ESTOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO!!!!!!!!!!!!
         while True:
             crossover_index1_p1 = np.random.random_integers(1, len(parent_1))
             crossover_index2_p1 = np.random.random_integers(1, len(parent_2))
-            if crossover_index2_p1 > crossover_index1_p2:
+            if crossover_index2_p1 > crossover_index1_p1:
                 break
                 
-        child_1 = parent_1[:crossover_index1] + parent_2[crossover_index1:crossover_index2]+ parent_1[crossover_index2:]
-        child_2 = parent_2[:crossover_index1] + parent_1[crossover_index1:crossover_index2]+ parent_2[crossover_index2:]
-        print crossover_index1
-        print crossover_index2
+        child_1 = parent_1[:crossover_index1_p1] + parent_2[crossover_index1_p1:crossover_index2_p1]+ parent_1[crossover_index2_p1:]
+        child_2 = parent_2[:crossover_index1_p1] + parent_1[crossover_index1_p1:crossover_index2_p1]+ parent_2[crossover_index2_p1:]
+        print crossover_index1_p1
+        print crossover_index2_p1
     else:
         child_1 = parent_1
         child_2 = parent_2
@@ -112,9 +126,22 @@ def crossover(parent_1, parent_2, pc):
     print "padre2: ", parent_2
     print "hijo1:  ", child_1
     print "hijo2:  ", child_2
-    return child_1, child_2
+    return [child_1, child_2]
+
+def crossover(population, num_cross, pc):
+	offsprings = []
+	for x in range(num_cross*2):
+		index1 = np.random.random_integers(0,len(population)-1)
+		index2 = np.random.random_integers(0,len(population)-1)
+		parent_1 = population[index1]
+		parent_2 = population[index2]
+		childs = crossover_aux(parent_1,parent_2, pc)
+		offsprings.append(childs)
+	return offsprings
 
 
+
+# Operacion de mutacion
 def mutate(individual, pm):
     for i in range(len(individual)):
     	muta = np.random.uniform(0,1)
@@ -128,7 +155,7 @@ def mutate(individual, pm):
 
 	print individual
 
-
+# Operacion de match
 def match(example, individual):
 	for x in range(len(example)):
 		if (example[x] == 1) and (example[x] != individual[x]):
@@ -136,17 +163,49 @@ def match(example, individual):
 
 	return True
 
-
+# Funcion de adaptacion (fitness)
 def fitness(hypothesis, num_ex, parents):
 	well = 0
 	for individual in parents:
-		if match(hypothesis,individual):
-			well += 1
-	correct = well / num_ex
-	individual[1] = correct^2 
+		check =  match(hypothesis["individual"],individual)
+		if check == True:
+			well += 1.0
+	correct = well / num_ex	
+	print "well: ", well
+	hypothesis["fitness"] = correct*correct
+
+
+def max_fitness(population):
+	# Almacenamos todos los valores de los fitness
+	val_fitness = []
+	for individual in population:
+		val_fitness.append(individual["fitness"])
+	# Ordenamos de menos a mayor
+	val_fitness.sort()
+	# Ordenamos el diccionario de poblaciones de acuerdo al val_fitness
+	population.sort(key = lambda x:val_fitness.index(x["fitness"]))
+	return population[-1]
 
 def GABIL(population, umbral, p,r,m):
+	# Seleccionamos las muestras del conjunto de datos
+	pop_aux = selection_random_hyp(population, 60)
+	# Generamos los individuals aleatorios
+	parents = individual_selection(population)
+	# Calculamos los fitness iniciales
+	for individual in pop_aux:
+		fitness(individual, 60, parents)
+		print individual["fitness"]
 
+	maxi = max_fitness(pop_aux)
+	while maxi < umbral:
+		pop_aux1 = selection(pop_aux, (1-r)*p)
+		pop_aux1 = pop_aux1 + crossover
+
+
+		pass
+	#while max()
+	#for x in pop_aux:
+		#print x["fitness"]
 
 def main():
 
@@ -242,17 +301,19 @@ def main():
         else:
             tmp4 = [1,1]
 
-        individuo = tmp + tmp1 + tmp2 + tmp3 + tmp4
-        population.append((individuo,0.1, 0.0))
+        individual = tmp + tmp1 + tmp2 + tmp3 + tmp4
+        population.append({"individual":individual, "fitness":0.0, "probability":0.0})
     
     
-    population = prob_selection_population(population)
+    #population = prob_selection_population(population)
     #print population
-    #crossover(population[0][0], population[100][0],0.6)
+    print crossover_aux(population[0]["individual"], population[100]["individual"],0.6)
     #mutate(population[0][0], 0.2)
     #individual_selection(population)
     #parents = individual_selection(population)
-    
+    #pop_aux = selection_random_hyp(population, 60)
+    #GABIL(population, 2,2,2,2)
+    #fitness(([1,0,0,1],0.0,0.1), 3, [[1,0,0,1,1], [1,0,0,0]])
     
 
 if __name__=="__main__":main()
