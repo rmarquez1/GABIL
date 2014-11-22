@@ -10,10 +10,14 @@ def prob_selection_population(population):
     sum_fitness_total = 0.0
     for individual in population:
         sum_fitness_total += individual["fitness"]
-    print "Sum fitness: ", sum_fitness_total
+    #print "Sum fitness: ", sum_fitness_total
 
     for individual in population:
-        individual["propability"] = individual["fitness"] / sum_fitness_total
+    	if sum_fitness_total != 0.0:
+        	individual["propability"] = individual["fitness"] / sum_fitness_total
+        else: 
+        	print "DIVISION POR CERO"
+        	exit()
         pop_aux.append(individual)
 
     population = pop_aux
@@ -97,7 +101,7 @@ def generating_individuals():
 					bit = np.random.random_integers(0,1)
 					child.append(bit)
 				break
-		individuals.append({"individuals": child, "fitness": 0.0, "probability": 0.0)
+		individuals.append({"individual": child, "fitness": 0.0, "probability": 0.0})
 	return individuals
 
 
@@ -160,23 +164,34 @@ def mutate(population, pm):
 
 # Operacion de match
 def match(example, individual):
-	for x in range(len(example)):
-		if (example[x] == 1) and (example[x] != individual[x]):
-			return False
-	return True
+	k = 0
+	i = 0
+	ver = []
+	while k < len(individual):
+		while i < len(example):
+			if (example[i] == 0) and (example[i] != individual[k]):
+				ver.append(0)
+				i = 0
+				break
+			else:
+				ver.append(1)
+				i += 1
+
+		
 
 # Funcion de adaptacion (fitness)
 def fitness(individual, num_ex, parents):
-	well = 0
-	print "Fitness anterior: ", individual["individuals"]
+	well = 0.0
+	#print "Fitness anterior: ", individual["fitness"]
 	for parent in parents:
-		check =  match(individual["individual"],parent)
+		check =  match(parent,individual["individual"])
+		#print check
 		if check == True:
 			well += 1.0
 	correct = well / num_ex	
 	#print "well: ", well
-	individual["fitness"] = correct*correct
-	print "Fitness Final: ", individual["individuals"]
+	individual["fitness"] = individual["fitness"] + (correct*correct)
+	#print "Fitness Final: ", individual["fitness"]
 
 
 def max_fitness(population):
@@ -194,25 +209,43 @@ def GABIL(population, umbral, p,r,m):
 	# Generamos los individuals aleatorios
 	individuals = generating_individuals()
 	# Seleccionamos las muestras del conjunto de datos
-	examples = selection_random_hyp(population, 60)
+	#examples = selection_random_hyp(population, 60)
+	examples = population
 	# Calculamos los fitness iniciales
 	for individual in individuals:
-		fitness(individual, 60, examples)
+		fitness(individual, 150, examples)
 		#print individual["fitness"]
-
-	maxi = max_fitness(pop_aux)
-	print maxi
-	"""
-	while maxi["fitness"] < umbral:
+	
+	# Calculamos probabilidades iniciales
+	#individuals = prob_selection_population(individuals)
+	
+	iterations = 0
+	while iterations < 1000:
+		#print "ITERATION: ", iterations
 		pop_aux1 = selection(individuals, (1-r)*p)
 		pop_aux1 = pop_aux1 + crossover(individuals, (r*p)/2,0.6)
 		pop_aux1 = mutate(pop_aux1, m)
 		individuals = pop_aux1
-		for individual in examples:
-			fitness(individual,60,individuals)
-
+		#print "Individuals: ", individuals
+		for individual in individuals:
+			fitness(individual,150,examples)
+		iterations += 1
+	maxi = max_fitness(individuals)
+	print maxi
+	#print individuals
+	suma = 0.0
+	for ex in examples:
+		ver = match(ex, maxi["individual"])
+		print ver
+		if ver == True:
+			suma += 1.0
+			print suma
+	print "TAM: ", len(examples)
+	print "SUMA: ", suma
+	porcentaje = suma/float(len(examples))
+	print "porcentaje: ", porcentaje
+	return max_fitness(individuals)
 		#print "TAM: ", len(pop_aux)
-	"""
 	#while max()
 	#for x in pop_aux:
 		#print x["fitness"]
@@ -322,7 +355,7 @@ def main():
     #generating_individuals(population)
     #parents = generating_individuals(population)
     #pop_aux = selection_random_hyp(population, 60)
-    #GABIL(population, 0.05,150,0.6,0.2)
+    GABIL(population, 0.05,150,0.6,0.2)
     #fitness(([1,0,0,1],0.0,0.1), 3, [[1,0,0,1,1], [1,0,0,0]])
     
 
